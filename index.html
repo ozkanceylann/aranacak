@@ -209,6 +209,7 @@ async function markAsCalled(event, row_no) {
     .from("musteriler_shn")
     .update({
       arama: true
+      arama_zamani: new Date().toISOString()
     })
     .eq("row_no", row_no);
 
