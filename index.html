@@ -190,7 +190,8 @@ function renderList(data) {
 async function markAsCalled(event, row_no) {
   event.stopPropagation();
 
-  const { error } = await client
+  // 1) ARANACAKLAR tablosunu güncelle
+  const { error: err1 } = await client
     .from("aranacaklar")
     .update({
       arandi: true,
@@ -198,13 +199,28 @@ async function markAsCalled(event, row_no) {
     })
     .eq("row_no", row_no);
 
-  if (error) {
-    console.error("Güncelleme hatası:", error);
+  if (err1) {
+    console.error("Aranacaklar güncelleme hatası:", err1);
     return;
   }
 
+  // 2) musteriler_shn tablosunda ARAMA sütununu güncelle
+  const { error: err2 } = await client
+    .from("musteriler_shn")
+    .update({
+      arama: true
+    })
+    .eq("row_no", row_no);
+
+  if (err2) {
+    console.error("Musteriler tablosu güncelleme hatası:", err2);
+    return;
+  }
+
+  // Listeyi yenile
   fetchList();
 }
+
 
 
 /* Sayfa açılınca listeyi çek */
