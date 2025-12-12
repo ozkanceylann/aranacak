@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aranacaklar</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    margin: 0;
+    padding: 15px;
+  }
+
+  .card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    cursor: pointer;
+  }
+
+  .row-main {
+    font-size: 17px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .row-main small {
+    color: #555;
+    font-size: 15px;
+    font-weight: normal;
+  }
+
+  .details {
+    margin-top: 12px;
+    font-size: 14px;
+    display: none;
+  }
+
+  .tag {
+    background: #27ae60;
+    padding: 3px 8px;
+    border-radius: 5px;
+    color: white;
+    font-size: 12px;
+    margin-top: 8px;
+    display: inline-block;
+  }
+
+  .btn {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .btn:disabled {
+    background: gray;
+    cursor: not-allowed;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>📞 Aranacaklar</h2>
+<div id="list"></div>
+
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* ===========================
+   1) SUPABASE BAĞLANTISI
+=========================== */
+const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";   // <-- BURAYI DEĞİŞTİR
+const SUPABASE_KEY = "YOUR-ANON-KEY";                      // <-- BURAYI DEĞİŞTİR
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+/* ===========================
+   2) VERİLERİ ÇEK
+=========================== */
+async function fetchList() {
+  const { data, error } = await supabase
+    .from("aranacaklar")
+    .select("*")
+    .order("arandi", { ascending: true }); // aranmayanlar en üstte
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  renderList(data);
+}
+
+
+/* ===========================
+   3) LİSTEYİ OLUŞTUR
+=========================== */
+function renderList(data) {
+  const container = document.getElementById("list");
+  container.innerHTML = "";
+
+  data.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="row-main">
+        <span>${item.ad_soyad ?? 'İsimsiz'}</span>
+        <small>${item.musteri_tel}</small>
+      </div>
+
+      ${item.arandi ? `<div class="tag">Arandı</div>` : ""}
+
+      <div class="details">
+        <p><b>Adres:</b> ${item.adres ?? '-'}</p>
+        <p><b>Şehir:</b> ${item.sehir ?? '-'}</p>
+        <p><b>İlçe:</b> ${item.ilce ?? '-'}</p>
+        <p><b>Ürün:</b> ${item.urun ?? '-'}</p>
+        <p><b>Kayıt Tarihi:</b> ${item.tarih ?? '-'}</p>
+
+        <button class="btn"
+          ${item.arandi ? "disabled" : ""}
+          onclick="markAsCalled(event, ${item.row_no})">
+            Arandı Olarak İşaretle
+        </button>
+      </div>
+    `;
+
+    // tıklandığında detay aç/kapat
+    card.addEventListener("click", function(e) {
+      if (e.target.classList.contains("btn")) return; 
+      const details = this.querySelector(".details");
+      details.style.display = details.style.display === "block" ? "none" : "block";
+    });
+
+    container.appendChild(card);
+  });
+}
+
+
+/* ===========================
+   4) ARANDI GÜNCELLE
+=========================== */
+async function markAsCalled(event, row_no) {
+  event.stopPropagation();
+
+  const { error } = await supabase
+    .from("aranacaklar")
+    .update({
+      arandi: true,
+      arama_zamani: new Date().toISOString()
+    })
+    .eq("row_no", row_no);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  fetchList(); // liste yenile
+}
+
+
+/* Sayfa açıldığında listeyi çek */
+fetchList();
+</script>
+
+</body>
+</html>
