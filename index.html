@@ -77,6 +77,34 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+function formatPhone(raw) {
+  if (!raw) return "";
+
+  let num = raw.replace(/\D/g, "");
+
+  // Başındaki 9'u kaldır
+  if (num.startsWith("9") && num.length >= 11) {
+    num = num.substring(1);
+  }
+
+  // Son 10 haneye indir
+  if (num.length > 10) num = num.slice(-10);
+
+  // 05xx xxx xx xx formatı
+  return num.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, "0$1 $2 $3 $4");
+}
+
+function telLink(raw) {
+  let num = raw.replace(/\D/g, "");
+
+  if (num.startsWith("9") && num.length >= 11) {
+    num = num.substring(1);
+  }
+
+  if (num.length > 10) num = num.slice(-10);
+
+  return "0" + num;
+}
 
 /* ===========================
    1) SUPABASE BAĞLANTISI
@@ -123,7 +151,8 @@ function renderList(data) {
     card.innerHTML = `
       <div class="row-main">
         <span>${item.ad_soyad ?? 'İsimsiz'}</span>
-        <small>${item.musteri_tel}</small>
+        <small><a href="tel:${telLink(item.musteri_tel)}" style="text-decoration:none; color:#555;"> ${formatPhone(item.musteri_tel)} </a></small>
+
       </div>
 
       ${item.arandi ? `<div class="tag">Arandı</div>` : ""}
