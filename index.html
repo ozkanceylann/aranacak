@@ -77,26 +77,29 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+
 /* ===========================
    1) SUPABASE BAĞLANTISI
 =========================== */
 const SUPABASE_URL = "https://jarsxtpqzqzhlshpmgot.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphcnN4dHBxenF6aGxzaHBtZ290Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyODExMTcsImV4cCI6MjA3Nzg1NzExN30.98oYONSkb8XSDrfGW2FxhFmt2BLB5ZRo3Ho50GhZYgE";
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// DOĞRU OLAN
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
 /* ===========================
    2) VERİLERİ ÇEK
 =========================== */
 async function fetchList() {
-  const { data, error } = await supabase
+
+  const { data, error } = await client
     .from("aranacaklar")
     .select("*")
-    .order("arandi", { ascending: true }); // aranmayanlar en üstte
+    .order("arandi", { ascending: true });
 
   if (error) {
-    console.error(error);
+    console.error("Supabase Hatası:", error);
     return;
   }
 
@@ -108,10 +111,12 @@ async function fetchList() {
    3) LİSTEYİ OLUŞTUR
 =========================== */
 function renderList(data) {
+
   const container = document.getElementById("list");
   container.innerHTML = "";
 
   data.forEach(item => {
+
     const card = document.createElement("div");
     card.className = "card";
 
@@ -128,7 +133,7 @@ function renderList(data) {
         <p><b>Şehir:</b> ${item.sehir ?? '-'}</p>
         <p><b>İlçe:</b> ${item.ilce ?? '-'}</p>
         <p><b>Ürün:</b> ${item.urun ?? '-'}</p>
-        <p><b>Kayıt Tarihi:</b> ${item.tarih ?? '-'}</p>
+        <p><b>Kayıt:</b> ${item.tarih ?? '-'}</p>
 
         <button class="btn"
           ${item.arandi ? "disabled" : ""}
@@ -138,15 +143,15 @@ function renderList(data) {
       </div>
     `;
 
-    // tıklandığında detay aç/kapat
     card.addEventListener("click", function(e) {
-      if (e.target.classList.contains("btn")) return; 
+      if (e.target.classList.contains("btn")) return;
       const details = this.querySelector(".details");
       details.style.display = details.style.display === "block" ? "none" : "block";
     });
 
     container.appendChild(card);
   });
+
 }
 
 
@@ -156,7 +161,7 @@ function renderList(data) {
 async function markAsCalled(event, row_no) {
   event.stopPropagation();
 
-  const { error } = await supabase
+  const { error } = await client
     .from("aranacaklar")
     .update({
       arandi: true,
@@ -165,16 +170,17 @@ async function markAsCalled(event, row_no) {
     .eq("row_no", row_no);
 
   if (error) {
-    console.error(error);
+    console.error("Güncelleme hatası:", error);
     return;
   }
 
-  fetchList(); // liste yenile
+  fetchList();
 }
 
 
-/* Sayfa açıldığında listeyi çek */
+/* Sayfa açılınca listeyi çek */
 fetchList();
+
 </script>
 
 </body>
