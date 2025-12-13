@@ -187,6 +187,9 @@ function renderList(data) {
 /* ===========================
    4) ARANDI GÜNCELLE
 =========================== */
+/* ===========================
+   4) ARANDI GÜNCELLE
+=========================== */
 async function markAsCalled(event, row_no) {
   event.stopPropagation();
 
@@ -207,9 +210,7 @@ async function markAsCalled(event, row_no) {
   // 2) musteriler_shn tablosunda ARAMA sütununu güncelle
   const { error: err2 } = await client
     .from("musteriler_shn")
-    .update({
-      arama: true
-    })
+    .update({ arama: true })
     .eq("row_no", row_no);
 
   if (err2) {
@@ -217,9 +218,15 @@ async function markAsCalled(event, row_no) {
     return;
   }
 
-  // Listeyi yenile
-  fetchList();
+  // 🔥 KARTI EKRANDAN SİL (hemen yenilensin)
+  event.target.closest(".card").remove();
+
+  // 🔥 Eğer ekranda 0 kart kaldıysa yeni 10 taneyi yükle
+  if (document.querySelectorAll(".card").length === 0) {
+    fetchList();
+  }
 }
+
 
 
 
