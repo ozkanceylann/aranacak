@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Giriş Yap</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  margin: 0;
+  padding: 0;
+}
+
+.login-box {
+  max-width: 420px;
+  margin: 90px auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+.login-box h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 18px;
+  background: #2ecc71;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #27ae60;
+}
+
+.error {
+  color: red;
+  margin-top: 12px;
+  text-align: center;
+  font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+  <h2>🔐 Giriş Yap</h2>
+
+  <input id="username" placeholder="Kullanıcı Adı">
+  <input id="password" type="password" placeholder="Şifre">
+
+  <button onclick="login()">Giriş Yap</button>
+
+  <div id="error" class="error"></div>
+</div>
+
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* ===========================
+   1) SUPABASE BAĞLANTISI
+=========================== */
+const SUPABASE_URL = "https://jarsxtpqzqzhlshpmgot.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphcnN4dHBxenF6aGxzaHBtZ290Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyODExMTcsImV4cCI6MjA3Nzg1NzExN30.98oYONSkb8XSDrfGW2FxhFmt2BLB5ZRo3Ho50GhZYgE";
+
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ===========================
+   2) ZATEN LOGIN MI?
+=========================== */
+if (localStorage.getItem("user")) {
+  window.location.href = "index.html";
+}
+
+/* ===========================
+   3) LOGIN
+=========================== */
+async function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const errorBox = document.getElementById("error");
+
+  errorBox.textContent = "";
+
+  if (!username || !password) {
+    errorBox.textContent = "Kullanıcı adı ve şifre zorunlu";
+    return;
+  }
+
+  const { data, error } = await client
+    .from("users")
+    .select("*")
+    .eq("username", username)
+    .eq("password", password)
+    .eq("aktif", true)
+    .single();
+
+  if (error || !data) {
+    errorBox.textContent = "Kullanıcı adı veya şifre hatalı";
+    return;
+  }
+
+  /* SESSION KAYDET */
+  localStorage.setItem("user", JSON.stringify({
+    id: data.id,
+    username: data.username,
+    admin: data.admin,
+    Queen: data.Queen,
+    Esin: data.Esin,
+    Tasdipli: data.Tasdipli,
+    Tad: data.Tad
+  }));
+
+  /* ANA SAYFAYA GİT */
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

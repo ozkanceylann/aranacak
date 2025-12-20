@@ -70,8 +70,19 @@
 
 <body>
 
+<button onclick="logout()" class="btn">Çıkış</button>
+
 <h2>📞 Aranacaklar</h2>
 <div id="list"></div>
+
+<script>
+/* LOGIN KONTROL */
+const userRaw = localStorage.getItem("user");
+if (!userRaw) {
+  window.location.href = "login.html";
+}
+const currentUser = JSON.parse(userRaw);
+</script>
 
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -82,15 +93,12 @@ function formatPhone(raw) {
 
   let num = raw.replace(/\D/g, "");
 
-  // Başındaki 9'u kaldır
   if (num.startsWith("9") && num.length >= 11) {
     num = num.substring(1);
   }
 
-  // Son 10 haneye indir
   if (num.length > 10) num = num.slice(-10);
 
-  // 05xx xxx xx xx formatı
   return num.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, "0$1 $2 $3 $4");
 }
 
@@ -112,15 +120,12 @@ function telLink(raw) {
 const SUPABASE_URL = "https://jarsxtpqzqzhlshpmgot.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphcnN4dHBxenF6aGxzaHBtZ290Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyODExMTcsImV4cCI6MjA3Nzg1NzExN30.98oYONSkb8XSDrfGW2FxhFmt2BLB5ZRo3Ho50GhZYgE";
 
-// DOĞRU OLAN
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 
 /* ===========================
    2) VERİLERİ ÇEK
 =========================== */
 async function fetchList() {
-
   const { data, error } = await client
     .from("aranacaklar")
     .select("*")
@@ -134,28 +139,28 @@ async function fetchList() {
   renderList(data);
 }
 
-
 /* ===========================
    3) LİSTEYİ OLUŞTUR
 =========================== */
 function renderList(data) {
-
   const container = document.getElementById("list");
   container.innerHTML = "";
 
   data.forEach(item => {
-
     const card = document.createElement("div");
     card.className = "card";
 
     card.innerHTML = `
       <div class="row-main">
         <span>${item.ad_soyad ?? 'İsimsiz'}</span>
-        <small><a href="tel:${telLink(item.musteri_tel)}" style="text-decoration:none; color:#555;"> ${formatPhone(item.musteri_tel)} </a></small>
-
+        <small>
+          <a href="tel:${telLink(item.musteri_tel)}" style="text-decoration:none; color:#555;">
+            ${formatPhone(item.musteri_tel)}
+          </a>
+        </small>
       </div>
 
-      ${item.arandi ? `<div class="tag">Arandı</div>` : ""}
+      ${item.arandi ? `<div class="tag">Arandı (${item.arayan ?? "-"})</div>` : ""}
 
       <div class="details">
         <p><b>Adres:</b> ${item.adres ?? '-'}</p>
@@ -167,7 +172,7 @@ function renderList(data) {
         <button class="btn"
           ${item.arandi ? "disabled" : ""}
           onclick="markAsCalled(event, ${item.row_no})">
-            Arandı Olarak İşaretle
+          Arandı Olarak İşaretle
         </button>
       </div>
     `;
@@ -180,25 +185,25 @@ function renderList(data) {
 
     container.appendChild(card);
   });
-
 }
 
+function logout() {
+  localStorage.removeItem("user");
+  window.location.href = "login.html";
+}
 
 /* ===========================
-   4) ARANDI GÜNCELLE
-=========================== */
-/* ===========================
-   4) ARANDI GÜNCELLE
+   4) ARANDI GÜNCELLE (ARAYAN EKLENDİ)
 =========================== */
 async function markAsCalled(event, row_no) {
   event.stopPropagation();
 
-  // 1) ARANACAKLAR tablosunu güncelle
   const { error: err1 } = await client
     .from("aranacaklar")
     .update({
       arandi: true,
-      arama_zamani: new Date().toISOString()
+      arama_zamani: new Date().toISOString(),
+      arayan: currentUser.username
     })
     .eq("row_no", row_no);
 
@@ -207,7 +212,6 @@ async function markAsCalled(event, row_no) {
     return;
   }
 
-  // 2) musteriler_shn tablosunda ARAMA sütununu güncelle
   const { error: err2 } = await client
     .from("musteriler_shn")
     .update({ arama: true })
@@ -218,21 +222,15 @@ async function markAsCalled(event, row_no) {
     return;
   }
 
-  // 🔥 KARTI EKRANDAN SİL (hemen yenilensin)
   event.target.closest(".card").remove();
 
-  // 🔥 Eğer ekranda 0 kart kaldıysa yeni 10 taneyi yükle
   if (document.querySelectorAll(".card").length === 0) {
     fetchList();
   }
 }
 
-
-
-
 /* Sayfa açılınca listeyi çek */
 fetchList();
-
 </script>
 
 </body>
