@@ -284,7 +284,7 @@ async function markAsCalled(event, row_no) {
 }
 
 
-  async function callAndMark(event, row_no) {
+async function callAndMark(event, row_no) {
   event.stopPropagation();
 
   const noteInput = document.getElementById(`note-${row_no}`);
@@ -302,7 +302,13 @@ async function markAsCalled(event, row_no) {
 
   if (error) {
     console.error("Arandı işaretleme hata:", error);
+    return;
   }
+
+  /* 🔥 UI’Yİ ANINDA GÜNCELLE */
+  fetchList();
+  fetchDailyStats();
+  fetchUserStats();
 }
 
 /* Sayfa açılınca listeyi çek */
