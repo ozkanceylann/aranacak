@@ -190,12 +190,20 @@ function renderList(data) {
       ${item.arandi ? `<div class="tag">Arandı (${item.arayan ?? "-"})</div>` : ""}
 
       <div class="details">
-      <textarea
+<textarea
   id="note-${item.row_no}"
   placeholder="Not yaz..."
   onclick="event.stopPropagation()"
   style="width:100%;margin-top:8px;border-radius:6px;padding:6px;"
 >${item.not ?? ""}</textarea>
+
+<button
+  class="btn"
+  style="margin-top:6px;background:#3498db"
+  onclick="saveNote(event, ${item.row_no})">
+  💾 Notu Kaydet
+</button>
+
         <p><b>Adres:</b> ${item.adres ?? '-'}</p>
         <p><b>Şehir:</b> ${item.sehir ?? '-'}</p>
         <p><b>İlçe:</b> ${item.ilce ?? '-'}</p>
