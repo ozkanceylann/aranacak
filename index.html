@@ -126,20 +126,38 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
    2) VERİLERİ ÇEK
 =========================== */
 async function fetchList() {
-  const { data, error } = await client
+
+  /* 1️⃣ ARANMAYANLAR – HEPSİ */
+  const { data: notCalled, error: err1 } = await client
     .from("aranacaklar")
     .select("*")
-    .eq("arandi", true)                          // sadece arananlar
-    .order("arama_zamani", { ascending: false }) // en son arananlar
-    .limit(10);                                  // sadece son 10 kayıt
+    .eq("arandi", false)
+    .order("row_no", { ascending: true });
 
-  if (error) {
-    console.error("Supabase Hatası:", error);
+  if (err1) {
+    console.error("Aranmayanlar hata:", err1);
     return;
   }
 
-  renderList(data);
+  /* 2️⃣ ARANANLAR – SADECE SON 10 */
+  const { data: calledLast10, error: err2 } = await client
+    .from("aranacaklar")
+    .select("*")
+    .eq("arandi", true)
+    .order("arama_zamani", { ascending: false })
+    .limit(10);
+
+  if (err2) {
+    console.error("Arananlar hata:", err2);
+    return;
+  }
+
+  /* 3️⃣ LİSTELERİ BİRLEŞTİR */
+  const combined = [...notCalled, ...calledLast10];
+
+  renderList(combined);
 }
+
 
 /* ===========================
    3) LİSTEYİ OLUŞTUR
