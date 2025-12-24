@@ -179,7 +179,9 @@ function renderList(data) {
       <div class="row-main">
         <span>${item.ad_soyad ?? 'İsimsiz'}</span>
         <small>
-          <a href="tel:${telLink(item.musteri_tel)}" style="text-decoration:none; color:#555;">
+          <a href="tel:${telLink(item.musteri_tel)}"
+   onclick="callAndMark(event, ${item.row_no})"
+   style="text-decoration:none; color:#555;">
             ${formatPhone(item.musteri_tel)}
           </a>
         </small>
@@ -188,6 +190,12 @@ function renderList(data) {
       ${item.arandi ? `<div class="tag">Arandı (${item.arayan ?? "-"})</div>` : ""}
 
       <div class="details">
+      <textarea
+  id="note-${item.row_no}"
+  placeholder="Not yaz..."
+  onclick="event.stopPropagation()"
+  style="width:100%;margin-top:8px;border-radius:6px;padding:6px;"
+>${item.not ?? ""}</textarea>
         <p><b>Adres:</b> ${item.adres ?? '-'}</p>
         <p><b>Şehir:</b> ${item.sehir ?? '-'}</p>
         <p><b>İlçe:</b> ${item.ilce ?? '-'}</p>
@@ -254,34 +262,46 @@ async function fetchDailyStats() {
 async function markAsCalled(event, row_no) {
   event.stopPropagation();
 
-  const { error: err1 } = await client
+  const noteInput = document.getElementById(`note-${row_no}`);
+  const noteText = noteInput ? noteInput.value.trim() : "";
+
+  const { error } = await client
     .from("aranacaklar")
     .update({
       arandi: true,
       arama_zamani: new Date().toISOString(),
-      arayan: currentUser.username
+      arayan: currentUser.username,
+      not: noteText
     })
     .eq("row_no", row_no);
 
-  if (err1) {
-    console.error("Aranacaklar güncelleme hatası:", err1);
-    return;
-  }
-
-  const { error: err2 } = await client
-    .from("musteriler_shn")
-    .update({ arama: true })
-    .eq("row_no", row_no);
-
-  if (err2) {
-    console.error("Musteriler tablosu güncelleme hatası:", err2);
+  if (error) {
+    console.error("Aranacaklar güncelleme hatası:", error);
     return;
   }
 
   event.target.closest(".card").remove();
+}
 
-  if (document.querySelectorAll(".card").length === 0) {
-    fetchList();
+
+  async function callAndMark(event, row_no) {
+  event.stopPropagation();
+
+  const noteInput = document.getElementById(`note-${row_no}`);
+  const noteText = noteInput ? noteInput.value.trim() : "";
+
+  const { error } = await client
+    .from("aranacaklar")
+    .update({
+      arandi: true,
+      arama_zamani: new Date().toISOString(),
+      arayan: currentUser.username,
+      not: noteText
+    })
+    .eq("row_no", row_no);
+
+  if (error) {
+    console.error("Arandı işaretleme hata:", error);
   }
 }
 
