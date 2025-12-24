@@ -129,7 +129,9 @@ async function fetchList() {
   const { data, error } = await client
     .from("aranacaklar")
     .select("*")
-    .order("arandi", { ascending: true });
+    .eq("arandi", true)                          // sadece arananlar
+    .order("arama_zamani", { ascending: false }) // en son arananlar
+    .limit(10);                                  // sadece son 10 kayıt
 
   if (error) {
     console.error("Supabase Hatası:", error);
