@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aranacaklar</title>
+  <div id="stats" style="margin:10px 0;font-weight:bold;"></div>
+
 
 <style>
   body {
@@ -159,6 +161,8 @@ async function fetchList() {
   renderList(combined);
 }
 
+fetchList();
+fetchDailyStats();
 
 /* ===========================
    3) LİSTEYİ OLUŞTUR
@@ -211,6 +215,37 @@ function renderList(data) {
 function logout() {
   localStorage.removeItem("user");
   window.location.href = "login.html";
+}
+  
+  client
+  .channel("aranacaklar-realtime")
+  .on(
+    "postgres_changes",
+    { event: "*", schema: "public", table: "aranacaklar" },
+    () => {
+      fetchList();
+    }
+  )
+  .subscribe();
+
+async function fetchDailyStats() {
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const { count, error } = await client
+    .from("aranacaklar")
+    .select("*", { count: "exact", head: true })
+    .eq("arandi", true)
+    .gte("arama_zamani", today.toISOString());
+
+  if (error) {
+    console.error("Sayaç hata:", error);
+    return;
+  }
+
+  document.getElementById("stats").innerText =
+    `📊 Bugün yapılan arama: ${count}`;
 }
 
 /* ===========================
