@@ -291,6 +291,38 @@ async function markAsCalled(event, row_no) {
   event.target.closest(".card").remove();
 }
 
+async function saveNote(event, row_no) {
+  event.stopPropagation();
+
+  const noteInput = document.getElementById(`note-${row_no}`);
+  if (!noteInput) return;
+
+  const noteText = noteInput.value.trim();
+
+  const { error } = await client
+    .from("aranacaklar")
+    .update({
+      not: noteText
+    })
+    .eq("row_no", row_no);
+
+  if (error) {
+    console.error("Not kaydetme hatası:", error);
+    alert("Not kaydedilemedi");
+    return;
+  }
+
+  /* UX geri bildirimi */
+  const btn = event.target;
+  const oldText = btn.innerText;
+  btn.innerText = "✅ Kaydedildi";
+  btn.disabled = true;
+
+  setTimeout(() => {
+    btn.innerText = oldText;
+    btn.disabled = false;
+  }, 1200);
+}
 
 async function callAndMark(event, row_no) {
   event.stopPropagation();
