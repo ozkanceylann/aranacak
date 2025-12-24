@@ -127,12 +127,13 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 =========================== */
 async function fetchList() {
 
-  /* 1️⃣ ARANMAYANLAR – HEPSİ */
+  /* 1️⃣ ARANMAYANLAR – SADECE 10 */
   const { data: notCalled, error: err1 } = await client
     .from("aranacaklar")
     .select("*")
     .eq("arandi", false)
-    .order("row_no", { ascending: true });
+    .order("row_no", { ascending: true })
+    .limit(10);
 
   if (err1) {
     console.error("Aranmayanlar hata:", err1);
